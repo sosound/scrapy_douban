@@ -4,9 +4,8 @@ from scrapy import Selector, Request
 from scrapy_douban.items import MovieItem
 
 """
-    该方法可以获取pagination按钮进行多个页面的爬取，但是存在问题。第一页会重复爬取
-一遍。原因是页面切换第一页之外的页面后，第一页的索引Url发生了改变。
-    调整下方start_urls的链接并不能解决问题，原因不明。
+    该方法可以获取pagination组件进行翻页从而爬取多个页面。存在的问题是必须
+限定爬取页面的数量，当然，可以设置大于实际存在的数量。
 """
 
 
@@ -14,6 +13,10 @@ class DoubanSpider(scrapy.Spider):
     name = 'douban'
     allowed_domains = ['movie.douban.com']
     start_urls = ['https://movie.douban.com/top250/']
+
+    def start_requests(self):
+        for page in range(11):
+            yield Request(url=f'https://movie.douban.com/top250?start={page*25}&filter=')
 
     def parse(self, response, **kwargs):
         sel = Selector(response)
@@ -24,8 +27,3 @@ class DoubanSpider(scrapy.Spider):
             movie_item['rank'] = list_item.css('span.rating_num::text').extract_first()
             movie_item['subject'] = list_item.css('span.inq::text').extract_first()
             yield movie_item
-
-        hrefs_list = sel.css('#content > div > div.article > div.paginator > a::attr(href)')
-        for href in hrefs_list:
-            url = response.urljoin(href.extract())
-            yield Request(url=url)
