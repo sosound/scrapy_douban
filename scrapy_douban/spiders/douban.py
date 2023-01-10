@@ -15,7 +15,7 @@ class DoubanSpider(scrapy.Spider):
     start_urls = ['https://movie.douban.com/top250/']
 
     def start_requests(self):
-        for page in range(2):
+        for page in range(3):
             yield Request(url=f'https://movie.douban.com/top250?start={page*25}&filter=')
 
     def parse(self, response, **kwargs):
